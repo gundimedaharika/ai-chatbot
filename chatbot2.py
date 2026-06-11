@@ -53,8 +53,7 @@ if question := st.chat_input("Ask me anything..."):
     history = "\n".join(f"{m['role']}: {m['content']}" for m in st.session_state.messages)
     with st.chat_message("assistant"):
         # answer = chain.invoke({"history": history, "question": question})
-    # instead of: answer = chain.invoke(...)
+        # instead of: answer = chain.invoke(...)
         answer = st.write_stream(chain.stream({"history": history, "question": question}))
-
-        st.write(answer)
+        # st.write(answer)
     st.session_state.messages.append({"role": "assistant", "content": answer})
