@@ -39,14 +39,17 @@ def get_answer(history: str, question: str) -> str:
         SystemMessage(f"You are a friendly, concise assistant.\nConversation so far:\n{history}"),
         HumanMessage(question)
     ]
-    response = llm_with_tools.invoke(msgs)
-    if response.tool_calls:
-        msgs.append(response)
-        for tc in response.tool_calls:
-            result = tools_by_name[tc["name"]].invoke(tc["args"])
-            msgs.append({"role": "tool", "content": str(result), "tool_call_id": tc["id"]})
+    try:
         response = llm_with_tools.invoke(msgs)
-    return response.content
+        if response.tool_calls:
+            msgs.append(response)
+            for tc in response.tool_calls:
+                result = tools_by_name[tc["name"]].invoke(tc["args"])
+                msgs.append({"role": "tool", "content": str(result), "tool_call_id": tc["id"]})
+            response = llm_with_tools.invoke(msgs)
+        return response.content
+    except Exception as e:
+        return "Sorry, I hit a problem with that one — could you rephrase? (e.g. include the city name for weather)"
 
 # ---------- Memory + redraw ----------
 if "messages" not in st.session_state:
