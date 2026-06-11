@@ -4,16 +4,26 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 # ---------- Page setup ----------
-st.title("🤖 My First AI Chatbot")
+st.title("🤖 Aum AI Chatbot")
 st.caption("Built with LangChain + Groq + Streamlit")
 
 # ---------- The chain (your existing knowledge) ----------
 # llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7)
-llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
-    temperature=0.7,
-    api_key=st.secrets["GROQ_API_KEY"]    # reads from Streamlit's secret store
-)
+with st.sidebar:
+    st.header("⚙️ Settings")
+    temp = st.slider("Temperature (creativity)", 0.0, 1.5, 0.7)
+    if st.button("🗑️ Clear chat"):
+        st.session_state.messages = []
+        st.rerun()
+
+llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=temp,
+               api_key=st.secrets["GROQ_API_KEY"])
+
+# llm = ChatGroq(
+#     model="llama-3.3-70b-versatile",
+#     temperature=0.7,
+#     api_key=st.secrets["GROQ_API_KEY"]    # reads from Streamlit's secret store
+# )
 
 prompt = ChatPromptTemplate.from_template(
     "You are a friendly, concise assistant.\n"
@@ -42,6 +52,9 @@ if question := st.chat_input("Ask me anything..."):
     # build history string and run the chain
     history = "\n".join(f"{m['role']}: {m['content']}" for m in st.session_state.messages)
     with st.chat_message("assistant"):
-        answer = chain.invoke({"history": history, "question": question})
+        # answer = chain.invoke({"history": history, "question": question})
+    # instead of: answer = chain.invoke(...)
+        answer = st.write_stream(chain.stream({"history": history, "question": question}))
+
         st.write(answer)
     st.session_state.messages.append({"role": "assistant", "content": answer})
